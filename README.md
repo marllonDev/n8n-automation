@@ -58,6 +58,9 @@ Este projeto implementa uma automação completa para ingestão, transformação
 
 > **Atenção:** Configure sempre suas próprias credenciais nos arquivos `.env` e nunca compartilhe dados sensíveis publicamente.
 
+### 6. Configurando credenciais no N8N
+- Para adicionar a credencial do Postgres e do MinIo, basta navegar até a pasta `/backup`. Os prints de como deve ficar estarão lá.
+
 ## Estrutura do Projeto
 ```
 analise-dados/

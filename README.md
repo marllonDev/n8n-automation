@@ -27,7 +27,7 @@ Este projeto implementa uma automação completa para ingestão, transformação
 - A variável `N8N_ENCRYPTION_KEY` é obrigatória para criptografar credenciais e dados sensíveis no n8n.
 - Para gerar uma chave segura, execute o comando abaixo no terminal:
   ```bash
-  openssl rand -hex 32
+  docker run --rm n8nio/n8n:latest n8n encryption --generate-key
   ```
 - Copie o resultado e cole na linha correspondente do seu arquivo `.env`:
   ```env

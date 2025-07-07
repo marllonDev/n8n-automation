@@ -1,0 +1,7 @@
+# Ignora todas as pastas de ambiente virtual
+.venv/
+.env/
+*.pyc
+__pycache__/
+analise-dados/.env
+n8n-compose/.env

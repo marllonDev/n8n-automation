@@ -1,0 +1,86 @@
+{
+  "name": "Transformation To Parquet",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a6537ce0-e6e2-419c-afcf-69cb9a063beb",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "command": "python3 /files/transform.py"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ],
+      "id": "ede32821-9307-4de7-90fe-a217da2d26fa",
+      "name": "Execute Command",
+      "notesInFlow": true,
+      "notes": "Copy + adição da coluna ID e CRIADO EM"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "93a3b217-17b9-47b9-97c5-aff993b4e146",
+  "meta": {
+    "instanceId": "d089f994347163de99967930fc36850d8c0d7fd551885186b737fa9783575942"
+  },
+  "id": "OHgbh9vJ5w8Jrois",
+  "tags": [
+    {
+      "createdAt": "2025-07-06T17:13:30.727Z",
+      "updatedAt": "2025-07-06T17:13:30.727Z",
+      "id": "2KsCDkNDjc0CoIX3",
+      "name": "SQL"
+    },
+    {
+      "createdAt": "2025-07-06T17:13:30.739Z",
+      "updatedAt": "2025-07-06T17:13:30.739Z",
+      "id": "BOaGKgghtPSZlYHB",
+      "name": "MinIO"
+    },
+    {
+      "createdAt": "2025-07-06T17:13:30.734Z",
+      "updatedAt": "2025-07-06T17:13:30.734Z",
+      "id": "EXeR7PW9nJKuImfx",
+      "name": "postgres"
+    },
+    {
+      "createdAt": "2025-07-06T23:34:07.914Z",
+      "updatedAt": "2025-07-06T23:34:07.914Z",
+      "id": "NafftLIlyJRTAC6v",
+      "name": "Transformation"
+    },
+    {
+      "createdAt": "2025-07-06T23:34:17.307Z",
+      "updatedAt": "2025-07-06T23:34:17.307Z",
+      "id": "jwtHMaeqJMkw8xg3",
+      "name": "Storage"
+    }
+  ]
+}

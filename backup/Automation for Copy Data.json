@@ -1,0 +1,295 @@
+{
+  "name": "Automation for Copy Data",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "raw-files-json",
+        "fileName": "=lote-offset-{{ $(\"Loop State\").item.json.offset }}.json",
+        "binaryData": false,
+        "fileContent": "={{ JSON.stringify($input.all().map(item => item.json), null, 2) }}",
+        "additionalFields": {},
+        "tagsUi": {
+          "tagsValues": [
+            {
+              "key": "source",
+              "value": "JSON"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        50
+      ],
+      "id": "a464fc00-539e-4f03-98d3-6c459ed805b0",
+      "name": "Upload a file",
+      "credentials": {
+        "s3": {
+          "id": "X5xKpPStjEa2yqfc",
+          "name": "S3 account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5e94b2b1-b085-4b7a-9118-aa6832debe00",
+              "leftValue": "={{ $items(\"SQL Query\").length  }}",
+              "rightValue": "={{ $(\"Loop State\").item.json.batchSize }}",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        20,
+        50
+      ],
+      "id": "c7e6fc0a-f07e-44f9-a387-df052da2ca4d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM FUNCIONARIOS LIMIT {{ $json.batchSize }} OFFSET {{ $json.offset }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -420,
+        50
+      ],
+      "id": "9bd5fc3a-2e10-4f3d-9497-5aa01b0a1d7c",
+      "name": "SQL Query",
+      "alwaysOutputData": true,
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "lcMS1DYbGrmF5fM6",
+          "name": "Postgres account"
+        }
+      },
+      "notes": "Pega em 10K em 10K do banco."
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { offset: 0 } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -860,
+        125
+      ],
+      "id": "cb1ff0f1-cae8-450c-ad8f-84b6e95d00e3",
+      "name": "InitLoop",
+      "notesInFlow": true,
+      "notes": "Função para pegar 10K"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "290ce7b6-ff74-429b-99e7-4f428ce3ad4a",
+              "name": "batchSize",
+              "value": 10000,
+              "type": "number"
+            },
+            {
+              "id": "a1da4a48-b895-4eea-a6ef-8a65136bf53a",
+              "name": "offset",
+              "value": "={{ $json.offset }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -640,
+        125
+      ],
+      "id": "678d591c-2613-488c-b37b-1d7c092773b6",
+      "name": "Loop State"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Este nó IGNORA sua entrada. Ele olha para trás, para a nossa \"memória\".\n// Ele pega o resultado que o nó \"Loop State\" produziu nesta iteração.\nconst currentState = $('Loop State').item.json;\n\n// Calcula o próximo offset de forma segura\nconst newOffset = currentState.offset + currentState.batchSize;\n\n// Retorna um NOVO item, contendo APENAS o próximo offset.\n// É este item que será enviado de volta para o nó 'Set' na próxima volta.\nreturn [{\n    json: {\n        offset: newOffset\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        225
+      ],
+      "id": "723fe1de-80f5-4fbd-bdd1-4485edaf3090",
+      "name": "UpdateOffset"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1080,
+        120
+      ],
+      "id": "2dadd09c-bd2f-4986-877c-9d2f0ca15861",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        0
+      ],
+      "id": "83f1e6a3-87df-446f-ad82-c897d2422210",
+      "name": "Error",
+      "webhookId": "34021001-e37f-4a84-9fa9-42b1e0d076f4",
+      "notesInFlow": true,
+      "notes": "Error"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Upload a file": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "UpdateOffset",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SQL Query": {
+      "main": [
+        [
+          {
+            "node": "Upload a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "InitLoop": {
+      "main": [
+        [
+          {
+            "node": "Loop State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop State": {
+      "main": [
+        [
+          {
+            "node": "SQL Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UpdateOffset": {
+      "main": [
+        [
+          {
+            "node": "Loop State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "InitLoop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3327bcbc-9d78-45b4-850c-cf20a815c69f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d089f994347163de99967930fc36850d8c0d7fd551885186b737fa9783575942"
+  },
+  "id": "clBWBsZqeeprmo6Z",
+  "tags": [
+    {
+      "createdAt": "2025-07-06T17:13:30.727Z",
+      "updatedAt": "2025-07-06T17:13:30.727Z",
+      "id": "2KsCDkNDjc0CoIX3",
+      "name": "SQL"
+    },
+    {
+      "createdAt": "2025-07-06T17:13:30.739Z",
+      "updatedAt": "2025-07-06T17:13:30.739Z",
+      "id": "BOaGKgghtPSZlYHB",
+      "name": "MinIO"
+    },
+    {
+      "createdAt": "2025-07-06T17:13:30.734Z",
+      "updatedAt": "2025-07-06T17:13:30.734Z",
+      "id": "EXeR7PW9nJKuImfx",
+      "name": "postgres"
+    }
+  ]
+}

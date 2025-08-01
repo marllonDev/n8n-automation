@@ -10,7 +10,61 @@ Este projeto implementa uma automação completa para ingestão, transformação
 
 ## Como usar
 
-### 1. Importando os Workflows do n8n
+### 1. Configurando seu Arquivo .env
+- **Atenção: Configure sempre suas próprias credenciais nos arquivos `.env` e nunca compartilhe dados sensíveis publicamente.**
+- Crie o arquivo `.env` no Path `n8n-automation\n8n-compose` do projeto para armazenar variáveis sensíveis.
+- Os nomes das variáveis devem ser iguais aos declarados no `docker-compose.yml` para subir os serviços. Então adicione os seguinte nomes de variáveis no seu arquivo `.env`:
+  ```env
+  DOMAIN_NAME=seu_domínio_aqui # Para caso você queria configurar um DNS. Ex: marllonDev.com
+  ```
+  ```env
+  SUBDOMAIN=seu_sub_domínio_aqui # Para caso você queria configurar um DNS, deverá pôr o seu sub domínio aqui, ex: n8n.
+  ```
+  > **Atenção:** Se os dois itens acima foram devidamente configurados, então o link final para acessar o n8n deveria ser assim: https://n8n.marllonDev.com.
+  > 
+  ```env
+  GENERIC_TIMEZONE=America/Sao_Paulo # Para usar o Fuso de São Paulo - Brasil.
+  ```
+  ```env
+  SSL_EMAIL=seu_email_aqui #Coloque seu e-mail que usará para fazer login na plataforma N8N. OBS: Use esse mesmo e-mail para fazer a criação da conta no N8N.
+  ```
+  ```env
+  POSTGRES_USER=seu_nome_de_user_aqui # Coloque um nome de user para seu banco de dados.
+  ```
+  ```env
+  POSTGRES_PASSWORD=sua_senha_aqui # Coloque uma senha de sua escolha para o seu banco de dados.
+  ```
+  ```env
+  MINIO_ROOT_USER=seu_nome_de_user_aqui # Coloque um nome de user de sua escolha para o login no MinIo.
+  ```
+  ```env
+  MINIO_ROOT_PASSWORD=sua_senha_aqui # Coloque uma senha de sua escolha para o login no MinIo.
+  ```
+  
+- Para análise de dados, crie um `.env` dentro da pasta `\analise-dados` com os mesmos nomes usados no `main.ipynb`, mas substitua pelos seus próprios dados de acesso.
+
+
+
+### 2. Rodando o projeto
+- A primeira coisa a se fazer após baixado o projeto, é navegar para a pasta `n8n-automation\n8n-compose`. Então rode o comando Docker para subir tudo:
+  ```env
+  docker compose up -d
+  ```
+- Você deverá ver todos os serviços ON no seu Terminal.
+- No Path `n8n-automation\n8n-compose`, crie uma arquivo `.env` para você posteriormente pôr suas variáveis.
+
+### 3. Gerando a N8N_ENCRYPTION_KEY
+- A variável `N8N_ENCRYPTION_KEY` é obrigatória para criptografar credenciais e dados sensíveis no n8n.
+- Para gerar uma chave segura, execute o comando abaixo no terminal:
+  ```env
+  docker run --rm n8nio/n8n:latest n8n encryption --generate-key
+  ```
+- Copie o resultado e cole na linha correspondente do seu arquivo `.env`:
+  ```env
+  N8N_ENCRYPTION_KEY=coloque_o_valor_gerado_aqui
+  ```
+  
+### 4. Importando os Workflows do n8n
 - Os arquivos `.json` na pasta `backup/` (ex: `Automation for Copy Data.json`, `Transformation To Parquet.json`) são workflows prontos do n8n.
 - Para importar:
   1. Acesse a interface web do n8n (ex: http://localhost:5678/).
@@ -18,23 +72,13 @@ Este projeto implementa uma automação completa para ingestão, transformação
   3. Selecione o arquivo `.json` desejado da pasta `backup/`.
   4. Salve e execute o workflow.
 
-### 2. Acessando o MinIO via Web
+### 5. Acessando o MinIO via Web
 - O MinIO possui uma interface web para gerenciamento dos arquivos.
 - Para acessar, abra o navegador e vá para: [http://localhost:9001](http://localhost:9001)
 - Use as credenciais definidas no arquivo `.env` (`MINIO_ROOT_USER` e `MINIO_ROOT_PASSWORD`).
 
-### 3. Gerando a N8N_ENCRYPTION_KEY
-- A variável `N8N_ENCRYPTION_KEY` é obrigatória para criptografar credenciais e dados sensíveis no n8n.
-- Para gerar uma chave segura, execute o comando abaixo no terminal:
-  ```bash
-  docker run --rm n8nio/n8n:latest n8n encryption --generate-key
-  ```
-- Copie o resultado e cole na linha correspondente do seu arquivo `.env`:
-  ```env
-  N8N_ENCRYPTION_KEY=coloque_o_valor_gerado_aqui
-  ```
 
-### 4. Importando o Dataset para o PostgreSQL
+### 6. Importando o Dataset para o PostgreSQL
 - O arquivo `dump_funcionarios.sql` na pasta `backup/` contém um dump do banco de dados com 1 milhão de linhas.
 - Para importar para dentro do container do banco:
   1. No terminal, navegue até a pasta `backup/`:
@@ -50,15 +94,7 @@ Este projeto implementa uma automação completa para ingestão, transformação
      docker exec -it postgres-db psql -U adm -d postgres -f /dump_funcionarios.sql
      ```
 
-### 5. Segurança e Boas Práticas
-- **Nunca compartilhe suas credenciais!**
-- Crie arquivos `.env` no seu projeto para armazenar variáveis sensíveis.
-- Os nomes das variáveis devem ser iguais aos declarados no `docker-compose.yml` para subir os serviços.
-- Para análise de dados, crie um `.env` dentro da pasta `analise-dados` com os mesmos nomes usados no `main.ipynb`, mas substitua pelos seus próprios dados de acesso.
-
-> **Atenção:** Configure sempre suas próprias credenciais nos arquivos `.env` e nunca compartilhe dados sensíveis publicamente.
-
-### 6. Configurando credenciais no N8N
+### 7. Configurando credenciais no N8N
 - Para adicionar a credencial do Postgres e do MinIo, basta navegar até a pasta `/backup/prints`. Os prints de como deve ficar estarão lá.
 
 ## Estrutura do Projeto
@@ -105,6 +141,6 @@ Me siga: [Linkedin](https://www.linkedin.com/in/marllonzuc/) \
 Meu Blog: [Blog](https://datatrends.me/)
 
 
-![Logo](https://media.licdn.com/dms/image/v2/D4D03AQEFlFTNmApBhQ/profile-displayphoto-shrink_800_800/B4DZbt9iTrHsAc-/0/1747749054334?e=1753315200&v=beta&t=VfBvrDxLmoAYccE0DW63MbSLz_ao9Xp_HQAfcyP7-og)
+![Logo](https://media.licdn.com/dms/image/v2/D4D03AQEFlFTNmApBhQ/profile-displayphoto-shrink_800_800/B4DZbt9iTrHsAc-/0/1747749054334?e=1756944000&v=beta&t=NW8glGWRr3nju_eTn_S49tng936yy-t1pxHxTU0JZ38)
 
 ---

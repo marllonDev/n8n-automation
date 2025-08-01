@@ -27,6 +27,7 @@ services:
       dockerfile: n8n.Dockerfile
     restart: always
     container_name: n8n
+    entrypoint: /usr/local/bin/n8n
     ports:
       - "127.0.0.1:5678:5678"
     labels:
@@ -50,6 +51,7 @@ services:
       - NODE_ENV=production
       - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
       - NODE_FUNCTION_ALLOW_BUILTIN=fs
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
       - N8N_EXECUTE_COMMAND_ENABLED=true
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}

@@ -13,7 +13,7 @@ Este projeto implementa uma automação completa para ingestão, transformação
 ### 1. Configurando seu Arquivo .env
 - **Atenção: Configure sempre suas próprias credenciais nos arquivos `.env` e nunca compartilhe dados sensíveis publicamente.**
 - Crie o arquivo `.env` no Path `n8n-automation\n8n-compose` do projeto para armazenar variáveis sensíveis.
-- Os nomes das variáveis devem ser iguais aos declarados no `docker-compose.yml` para subir os serviços. Então adicione os seguinte nomes de variáveis no seu arquivo `.env`:
+- Os nomes das variáveis devem ser iguais aos declarados no `docker-compose.yml`. Então adicione os seguintes nomes de variáveis no seu arquivo `.env`:
   ```env
   DOMAIN_NAME=seu_domínio_aqui # Para caso você queria configurar um DNS. Ex: marllonDev.com
   ```
@@ -40,9 +40,18 @@ Este projeto implementa uma automação completa para ingestão, transformação
   ```env
   MINIO_ROOT_PASSWORD=sua_senha_aqui # Coloque uma senha de sua escolha para o login no MinIo.
   ```
-  
-- Para análise de dados, crie um `.env` dentro da pasta `\analise-dados` com os mesmos nomes usados no `main.ipynb`, mas substitua pelos seus próprios dados de acesso.
 
+  
+- Para análise de dados, crie um `.env` dentro da pasta `\analise-dados` com os mesmos nomes usados no `main.ipynb`, mas substitua pelos seus próprios dados de acesso. 
+  ```env
+  MINIO_ENDPOINT=http://localhost:9000 # Esse é o endereço da qual o import s3 irá fazer a conexão
+  ```
+  ```env
+  MINIO_ACCESS_KEY=seu_user_aqui # Add seu User aqui para o s3 fazer a conexão com o seu MinIo(pode pôr a mesma que cocolou no .env anterior)
+  ```
+   ```env
+  MINIO_SECRET_KEY=sua_senha_aqui # Add sua senha aqui para o s3 fazer a conexão com o seu MinIo(pode pôr a mesma que cocolou no .env anterior)
+  ```
 
 
 ### 2. Rodando o projeto
@@ -51,41 +60,32 @@ Este projeto implementa uma automação completa para ingestão, transformação
   docker compose up -d
   ```
 - Você deverá ver todos os serviços ON no seu Terminal.
-- No Path `n8n-automation\n8n-compose`, crie uma arquivo `.env` para você posteriormente pôr suas variáveis.
+
 
 ### 3. Gerando a N8N_ENCRYPTION_KEY
 - A variável `N8N_ENCRYPTION_KEY` é obrigatória para criptografar credenciais e dados sensíveis no n8n.
 - Para gerar uma chave segura, execute o comando abaixo no terminal:
   ```env
-  docker run --rm n8nio/n8n:latest n8n encryption --generate-key
+  docker exec -it n8n openssl rand -hex 32 
   ```
-- Copie o resultado e cole na linha correspondente do seu arquivo `.env`:
+- Copie o resultado e cole na linha correspondente do seu arquivo `.env` no Path `n8n-automation\n8n-compose\.env`:
   ```env
   N8N_ENCRYPTION_KEY=coloque_o_valor_gerado_aqui
   ```
-  
-### 4. Importando os Workflows do n8n
-- Os arquivos `.json` na pasta `backup/` (ex: `Automation for Copy Data.json`, `Transformation To Parquet.json`) são workflows prontos do n8n.
-- Para importar:
-  1. Acesse a interface web do n8n (ex: http://localhost:5678/).
-  2. Clique em **Importar** (ícone de upload) no menu superior.
-  3. Selecione o arquivo `.json` desejado da pasta `backup/`.
-  4. Salve e execute o workflow.
-
-### 5. Acessando o MinIO via Web
-- O MinIO possui uma interface web para gerenciamento dos arquivos.
-- Para acessar, abra o navegador e vá para: [http://localhost:9001](http://localhost:9001)
-- Use as credenciais definidas no arquivo `.env` (`MINIO_ROOT_USER` e `MINIO_ROOT_PASSWORD`).
+- Rode o comando docker abaixo para atualizar os seus contâiners com essa nova chave:
+   ```bash
+     docker compose down # Para parar para excluir os contâiners
+   ```
+   ```bash
+     docker compose up -d # Para subir novamente os contâiners
+   ```
 
 
-### 6. Importando o Dataset para o PostgreSQL
+### 4. Importando o Dataset para o PostgreSQL
 - O arquivo `dump_funcionarios.sql` na pasta `backup/` contém um dump do banco de dados com 1 milhão de linhas.
 - Para importar para dentro do container do banco:
-  1. No terminal, navegue até a pasta `backup/`:
-     ```bash
-     cd /caminho/para/backup
-     ```
-  2. Copie o dump para dentro do container:
+  1. No terminal, navegue até a pasta `backup/`.
+  2. Copie o dump para dentro do container usando a linha de comando abaixo:
      ```bash
      docker cp dump_funcionarios.sql postgres-db:/dump_funcionarios.sql
      ```
@@ -93,9 +93,94 @@ Este projeto implementa uma automação completa para ingestão, transformação
      ```bash
      docker exec -it postgres-db psql -U adm -d postgres -f /dump_funcionarios.sql
      ```
+  4. Agora, 1 milhão de linhas estão dentro do banco pronto para você brincar.
 
-### 7. Configurando credenciais no N8N
+     
+### 5. Importando os Workflows do n8n
+- Os arquivos `.json` na pasta `backup/` (ex: `Automation for Copy Data.json`, `Transformation To Parquet.json`) são workflows prontos do n8n.
+- Para importar:
+  1. Acesse a interface web do n8n (ex: http://localhost:5678/).
+  2. Clique em **Create Workflow** no botão superior da direita.
+  3. Com um Workflow em branco, clique nos três pontinhos, e depois em **Import from File** 
+  4. Selecione o arquivo `Automation for Copy Data.json` da pasta `backup/`.
+  5. Salve.
+  6. Faça o mesmo para o outro arquivo.
+
+### 6. Configurando credenciais no N8N
 - Para adicionar a credencial do Postgres e do MinIo, basta navegar até a pasta `/backup/prints`. Os prints de como deve ficar estarão lá.
+- Para adicionar cada credencial, você pode clicar duas vezes no Nó do **Postgres** e clicar em **Create new Credential**, depois é só seguir como nos prints. Faça o mesmo para o Nó do **Bucket S3**, que se encontra ao lado do Nó do Postgres.
+
+### 7. Acessando o MinIO via Web
+- O MinIO possui uma interface web para gerenciamento dos arquivos.
+- Para acessar, abra o navegador e vá para: [http://localhost:9001](http://localhost:9001)
+- Use as credenciais definidas no arquivo `.env`(`MINIO_ROOT_USER` e `MINIO_ROOT_PASSWORD`) do Path `n8n-automation\n8n-compose`.
+- Após logado há dois buckets que devem ser criados:
+  1. Para adicionar um novo bucket, clique no botão no canto superior esquerdo com o nome **Create Bucket**, e adicione o nome **raw-files-json**, então salve. Faça o mesmo para o outro bucket, mas o segundo deve ter o nome de **processed-parquet**.
+
+
+### 8. Ajustando arquivo `s3_setup.sql`
+- O arquivo nesse Path `\n8n-compose\local-files\s3_setup.sql`, deve ser confugurado adicionando as seguintes informações: 
+ ```env
+     s3_access_key_id = '' # Seu MINIO_ROOT_USER. O mesmo do arquivo .env.
+ ```
+ ```env
+     s3_secret_access_key = '' # Seu Seu MINIO_ROOT_PASSWORD. O mesmo do arquivo .env.
+ ```
+- Os outros campos já viram preenchidos como devem ser.
+
+
+### 9. Transformando os dados brutos em parquet
+- Quando você colocar para rodar o workflow `Automation for Copy Data.json`, ele ira pegar de 10K em 10K do banco de dados, você pode deixar rodar por uns 5 minutos para pegar alguns dados consideraveis.
+- Após isso, basta ir no outro workflow e colocar para rodar. Ele irá "chamar" o arquivo **transform.py**, onde está o código em Python que irá buscar os dados do MinIo, transforma-los em parquet e salvar no bucket de nome **processed-parquet**.
+- Uma vez executado, você poderá entrar no bucket **processed-parquet**, e verá que os arquivos do bucket **raw-files-json** foram juntados em um só, e transformados em .parquet. Um formato mais leve. Pode reparar isso vendo no Header dos dois buckets, o somatórios de todos os arquivos que estão em cada um.
+
+
+### 10. Fazendo a Análise de Dados
+- Por último, foi criado um arquivo no Path `n8n-automation\analise-dados\main.ipynb`, onde você vai usar o VS Code ou outra IDE de seu interesse para rodar um simples código de análise, ou seja, o início de tudo que é a configuração com o MinIo, e depois disso um SELECT para vermos o que há naquele arquivo.
+- Para rodar esse arquivo, é interessante que você tenha a extensão **Jupyter** que pode ser baixada no VS Code. Com ele instalado, você pode rodar o arquivo Célula por Célula ou clicar no "Run all" para rodar tudo de uma vez.
+- Para rodar isso em um enviroment separado, vá a pasta `n8n-automation\analise-dados\` usando o comando CD do terminal e crie uma variável de ambiente. Siga os comandos abaixo para isso:
+    1. ```env
+       python -m venv .venv
+         ```
+    2. Agora, vamos ativar o seu enviroment com o seguinte comando:
+       1. No CMD do Win, use esse comando:
+           ```env
+           .\.venv\Scripts\activate
+             ```
+       2. No Linux e no Mac, use o seguinte comando
+             ```env
+           source .venv/bin/activate
+             ```
+    4. Com o .venv ativado, vamos baixar alguns módulos que seram instaladas dentro do .venv somente. Rode o comando abaixo:
+       ```env
+       pip install pandas s3fs python-dotenv pyarrow fastparquet
+         ```
+    5. Agora, precisamos instalar o "motor" do Jupyter, então rode o comando abaixo:
+        ```env
+       pip install ipykernel
+         ```
+    6. Agora, vamos "apresentar" formalmente o nosso ambiente para o sistema Jupyter do seu computador, dando a ele um nome amigável que aparecerá na lista de opções. Rode o comando abaixo:
+        ```env
+       python -m ipykernel install --user --name="analise-dados-venv" --display-name="Python (Análise de Dados)"
+         ```
+    7. Vamos selecionar o kernel correto então:
+       1. Reinicie o VS Code para garantir que ele detecte o novo kernel que acabamos de registrar.
+       2. Abra seu arquivo .ipynb.
+       3. No canto superior direito, clique no nome do kernel atual ou no botão "Select Kernel".
+       4. Na lista que aparecer, procure e selecione o nome amigável que definimos: Python (Análise de Dados).
+        
+- NOTA: Se ao rodar a última Célula e dar o seguinte **ERRO: Não foi possível ler o arquivo. Verifique o caminho, as credenciais e o endpoint.Detalhe do erro: No type extension with name arrow.py_extension_type found**, então rode o comando:
+  ```env
+       pip install --upgrade pandas pyarrow s3fs python-dotenv
+  ```
+- Dê um Restart no Kernel e depois coloque para rodar novamente.
+- Após rodar o SELECT verá que tem duas novas colunas, a coluna de "ID" e a "Criado em". Foram criadas somente essas duas para manter a coisa simples, mas em um projeto grande de Dados, podem ser adicionadas várias colunas com diferentes critérios. Isso é o enrriquecimento do dado.
+
+
+  ## Agora os próximos passos são com você, use sua imaginação para fazer mais análise desses dados, afinal, você tem um banco com 1 milhão de registros. Tenho certeza que da pra fazer muita coisa com isso. Me despeço, dizendo que foi um prazer produzir esse projeto para o pessoal da área e curiosos. Até mais vê.
+
+
+
 
 ## Estrutura do Projeto
 ```
